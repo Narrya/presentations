@@ -462,15 +462,15 @@
         <section>
           <section class="section-header">
             <h2>Acceptance test</h2>
-            <div class="fragment"><span class="color">Given</span> I am in the <b>kitchen</b></div>
-            <div class="fragment"><span class="color">When</span> I put <b>coffe beans</b> to the <b>coffe machine</b></div>
-            <div class="fragment"><span class="color">And</span> I put <b>cup</b> to the <b>feeder plate</b></div>
+            <div class="fragment"><span class="color">Given</span> I am in the <b class="color">kitchen</b></div>
+            <div class="fragment"><span class="color">When</span> I put <b class="color">coffe beans</b> to the <b class="color">coffe machine</b></div>
+            <div class="fragment"><span class="color">And</span> I put <b class="color">cup</b> to the <b class="color">feeder plate</b></div>
             <div class="fragment"><span class="color">And</span> I wait until led control will switch off</div>
-            <div class="fragment"><span class="color">And</span> I take <b>cup</b> from <b>feeder plate</b></div>
-            <div class="fragment"><span class="color">And</span> I put <b>2 spoons of milk</b> to the <b>cup</b></div>
-            <div class="fragment"><span class="color">And</span> I put <b>2 spoons of sugar</b> to the <b>cup</b></div>
-            <div class="fragment"><span class="color">And</span> I drink a <b>coffe</b></div>
-            <div class="fragment"><span class="color">Then</span> I should <b>feel new power</b></div>
+            <div class="fragment"><span class="color">And</span> I take <b class="color">cup</b> from <b class="color">feeder plate</b></div>
+            <div class="fragment"><span class="color">And</span> I put <b class="color">2 spoons of milk</b> to the <b class="color">cup</b></div>
+            <div class="fragment"><span class="color">And</span> I put <b class="color">2 spoons of sugar</b> to the <b class="color">cup</b></div>
+            <div class="fragment"><span class="color">And</span> I drink a <b class="color">coffe</b></div>
+            <div class="fragment"><span class="color">Then</span> I should feel the power</div>
           </section>
 
           <section class="section-header">
@@ -483,22 +483,22 @@
           </section>
 
           <section class="section-header">
-            <div>Given I am in the <b>kitchen</b></div>
+            <div><span class="color">Given</span> I am in the <b class="color">kitchen</b></div>
             <pre class="fragment"><code class="ruby">Given(/^I am in the (.*?)/) do |where|
   @person.goTo(where)
 end</code></pre>
           </section>
 
           <section class="section-header">
-            <div>When I put <b>coffe beans</b> to the <b>coffe machine</b></div>
+            <div><span class="color">When</span> I put <b class="color">coffe beans</b> to the <b class="color">coffe machine</b></div>
             <pre class="fragment"><code class="ruby">When(/^I put (.*?) to the (.*?)$/) do |product_name, destination_name|
   destination.put(product_name)
 end</code></pre>
           </section>
 
            <section class="section-header">
-            <div>Then I should <b>feel new power</b></div>
-            <pre class="fragment"><code class="ruby">Then(/^I should feel new power$/) do
+            <div><span class="color">Then</span> I should feel the power</div>
+            <pre class="fragment"><code class="ruby">Then(/^I should feel the power$/) do
   if @person.getCoffeSatisfactionLevel() < 10
     fail('Too little power to start day effectively! Prepare second coffee ;)')
   end
