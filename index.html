@@ -1,0 +1,596 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <title>BDD od kuchni</title>
+
+    <meta name="description" content="Podstawy profilowania i analiza wydajności aplikacji webowych">
+    <meta name="author" content="Wojciech Gawroński">
+
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+
+    <link href="http://fonts.googleapis.com/css?family=Roboto+Slab|Roboto&subset=latin,latin-ext"
+          rel="stylesheet" type="text/css">
+
+    <link rel="stylesheet" href="css/reveal.css" />
+    <link rel="stylesheet" href="css/TangleKit.css" />
+    <link rel="stylesheet" href="css/theme/default.css" id="theme" />
+
+    <link rel="stylesheet" href="lib/css/github.css" />
+
+    <script src="js/raphael.js"></script>
+    <script src="js/raphael.group.js"></script>
+    <script src="js/raphael.tachometer.min.js"></script>
+
+    <script src="js/popup.js"></script>
+    <script src="js/Tangle.js"></script>
+    <script src="js/mootools.js"></script>
+    <script src="js/sprintf.js"></script>
+    <script src="js/BVTouchable.js"></script>
+    <script src="js/TangleKit.js"></script>
+    <script>
+      var RAD = Math.PI / 180;
+
+      function getRandomArbitary(min, max) {
+        return Math.random() * (max - min) + min;
+      }
+
+      function createRectPath(x, y, a) {
+        return "M" + x + "," + y + "l" + a + ",0 0," + a + "-" + a + ",0z";
+      }
+
+      function createTrianglePath(x, y, a) {
+        return "M" + x + "," + y + "l" + a / 2 + "," + a + " -" + a + ",0z";
+      }
+
+      function createRightArrowPath(x, y) {
+        return "M" + x + "," + y + "m-10-10l40,0 0-6 20,16 -20,16 0-6 -40,0 -0-16z"
+      }
+
+      function createGearboxPath() {
+        return "M295.186,122.908c12.434,18.149,32.781,18.149,45.215,0l12.152-17.736c12.434-18.149,22.109-15.005,21.5,6.986l-0.596,21.49c-0.609,21.992,15.852,33.952,36.579,26.578l20.257-7.207c20.728-7.375,26.707,0.856,13.288,18.29l-13.113,17.037c-13.419,17.434-7.132,36.784,13.971,43.001l20.624,6.076c21.103,6.217,21.103,16.391,0,22.608l-20.624,6.076c-21.103,6.217-27.39,25.567-13.971,43.001l13.113,17.037c13.419,17.434,7.439,25.664-13.287,18.289l-20.259-7.207c-20.727-7.375-37.188,4.585-36.578,26.576l0.596,21.492c0.609,21.991-9.066,25.135-21.5,6.986L340.4,374.543c-12.434-18.148-32.781-18.148-45.215,0.001l-12.152,17.736c-12.434,18.149-22.109,15.006-21.5-6.985l0.595-21.492c0.609-21.991-15.851-33.951-36.578-26.576l-20.257,7.207c-20.727,7.375-26.707-0.855-13.288-18.29l13.112-17.035c13.419-17.435,7.132-36.785-13.972-43.002l-20.623-6.076c-21.104-6.217-21.104-16.391,0-22.608l20.623-6.076c21.104-6.217,27.391-25.568,13.972-43.002l-13.112-17.036c-13.419-17.434-7.439-25.664,13.288-18.29l20.256,7.207c20.728,7.374,37.188-4.585,36.579-26.577l-0.595-21.49c-0.609-21.992,9.066-25.136,21.5-6.986L295.186,122.908z";
+      }
+
+      function font(color) {
+        return {
+          "font": "18px 'Helvetica Neue', Arial",
+          "font-weight": "bold",
+          "fill": color
+        };
+      }
+
+      function createArcPath(cx, cy, r, startAngle, endAngle) {
+        var x1 = cx + r * Math.cos(-startAngle * RAD),
+            x2 = cx + r * Math.cos(-endAngle * RAD),
+            y1 = cy + r * Math.sin(-startAngle * RAD),
+            y2 = cy + r * Math.sin(-endAngle * RAD);
+
+        return ["M", cx, cy, "L", x1, y1, "A", r, r, 0, +(endAngle - startAngle > 180), 0, x2, y2, "z"];
+      }
+
+      function spinner(r, centerx, centery, spinnerId, R1, R2, count, stroke_width, colour) {
+        var sectorsCount = count || 12,
+            color = colour || "#888",
+            group = r.group(),
+            width = stroke_width || 5,
+            r1 = Math.min(R1, R2) || 10,
+            r2 = Math.max(R1, R2) || 25,
+            cx = centerx + r2 + width,
+            cy = centery + r2 + width,
+
+            sectors = [],
+            opacity = [],
+            beta = 2 * Math.PI / sectorsCount,
+
+            pathParams = { stroke: color, "stroke-width": width, "stroke-linecap": "round" };
+
+        Raphael.getColor.reset();
+
+        if (spinnerId) {
+          group.id(spinnerId);
+        }
+
+        for (var i = 0; i < sectorsCount; i++) {
+          var alpha = beta * i - Math.PI / 2,
+              cos = Math.cos(alpha),
+              sin = Math.sin(alpha);
+
+          opacity[i] = 1 / sectorsCount * i;
+          sectors[i] = r.path([["M", cx + r1 * cos, cy + r1 * sin], ["L", cx + r2 * cos, cy + r2 * sin]])
+                        .attr(pathParams);
+
+          group.push(sectors[i]);
+
+          sectors[i].attr("data-name", "sectors");
+
+          if (color == "rainbow") {
+            sectors[i].attr("stroke", Raphael.getColor());
+          }
+        }
+
+        var tick;
+
+        (function ticker() {
+          opacity.unshift(opacity.pop());
+
+          for (var i = 0; i < sectorsCount; i++) {
+            sectors[i].attr("opacity", opacity[i]);
+          }
+
+          r.safari();
+          tick = setTimeout(ticker, 1000 / sectorsCount);
+        } ());
+
+        return function () {
+          clearTimeout(tick);
+
+          for (var i = 0; i < sectorsCount; i++) {
+            sectors[i].remove();
+          }
+        };
+      }
+
+      Raphael.fn.arrow = function (x, y) {
+          return this.path(["M", x, y ] + "m-10-10l20,0 0-6 10,16 -10,16 0-6 -20,0 0,6 -10-16 10-16z")
+                     .attr({ fill: "#fff", stroke: "none", "stroke-dasharray": "-", "fill-opacity": 0.2 });
+      };
+
+      Raphael.fn.rightArrow = function (x, y) {
+          return this.path(createRightArrowPath(x, y))
+                     .attr({ fill: "#fff", stroke: "none", "stroke-dasharray": "-", "fill-opacity": 0.5 });
+      };
+
+      Raphael.fn.gearBox = function() {
+          return this.path(createGearboxPath())
+                     .attr({ stroke: "white", opacity: 0.9, "stroke-width": 10 });
+      };
+
+      Raphael.fn.thinArrow = function(x1, y1, x2, y2, size) {
+        var angle = Raphael.angle(x1, y1, x2, y2);
+            a45   = Raphael.rad(angle - 45),
+            a45m  = Raphael.rad(angle + 45),
+            a135  = Raphael.rad(angle - 135),
+            a135m = Raphael.rad(angle + 135),
+            x1a = x1 + Math.cos(a135) * size,
+            y1a = y1 + Math.sin(a135) * size,
+            x1b = x1 + Math.cos(a135m) * size,
+            y1b = y1 + Math.sin(a135m) * size,
+            x2a = x2 + Math.cos(a45) * size,
+            y2a = y2 + Math.sin(a45) * size,
+            x2b = x2 + Math.cos(a45m) * size,
+            y2b = y2 + Math.sin(a45m) * size;
+
+        return this.path("M" + x1 + " " + y1 + "L" + x1a + " " + y1a + "M" + x1 + " " + y1 + "L" + x1b + " " + y1b +
+                         "M" + x1 + " " + y1 + "L" + x2 +  " " + y2 +
+                         "M" + x2 + " " + y2 + "L" + x2a + " " + y2a + "M" + x2 + " " + y2 + "L" + x2b + " " + y2b);
+      };
+
+      Raphael.fn.drawAnnotatedSlice = function(x, y, size, text, color, width, yOffset) {
+        var height = 20;
+
+        width = width || 1;
+        yOffset = yOffset || 0;
+
+        this.text(x + (size / 2), y - 65 - yOffset, text).attr(font(white));
+
+        this.path("M" + x + " " + y + "L" + (x + size) + " " + y).attr({ "stroke": color, "stroke-width": 10 });
+
+        this.path("M" + (x + size) + " " + (y - height) + "L" + (x + size) + " " + (y + height))
+            .attr({ "stroke": color, "stroke-width": width });
+
+        this.path("M" + x + " " + (y - height) + "L" + x + " " + (y + height))
+            .attr({ "stroke": color, "stroke-width": width });
+      };
+
+      var dashed = { fill: "none", stroke: "#666", "stroke-dasharray": "- " },
+          black = "#333",
+          gray = "#888",
+          white = "#ffffff",
+          red = "#ff0000",
+          green = "#00ff00",
+          yellow = "#ffff00",
+          lightBlue = "#00ffff",
+          nodeGreen = "#8CC84B";
+    </script>
+    <script>
+      document.write("<link rel='stylesheet' href='css/print/" +
+                     (window.location.search.match(/print-pdf/gi) ? "pdf" : "paper") +
+                    ".css' type='text/css' media='print'>");
+    </script>
+  </head>
+  <body>
+    <div class="reveal">
+      <div class="slides">
+        <section>
+          <h1>BDD<br/>od kuchni</h1>
+
+          <span class="license">
+            Licencja: <a href="http://creativecommons.org/licenses/by-nd/3.0/pl/">CC BY-ND 3.0 PL</a>
+          </span>
+
+          <aside class="notes">
+            <ul>
+              <li>
+                Prezentacja będzie dostępna na moim repozytorium na githubie.
+              </li>
+            </ul>
+          </aside>
+        </section>
+
+        <section>
+
+      <section class="section-header">
+            <h2>Poznajmy się :)</h2>
+
+            <aside class="notes">
+              <ul>
+                <li>
+                  Kamila Kupidura wierny uczestnik śląskich spotkań karotek, dzisiaj trochę w odmiennej roli, Dorota zapytała mnie czy mogę o czymś ciekawym opowiedzieć i zanim zdążyłam wymyslić wymówkę ona pytała mnie już o temat więc dziś wychodzę ze swojej strefy komfortu słuchacza.
+                </li>
+              </ul>
+            </aside>
+          </section>
+
+      <section class="section-header">
+            <h2>Kamila - podobno pasuje do karotek z racji imienia</h2>
+            <h3><em>...ale może coś poza imieniem?</em></h3>
+      </section>
+
+      <section class="section-header">
+            <h2>Gorol</h2>
+            <img class="fragment" src="img/3cytryny.jpg" />
+
+             <aside class="notes">
+              <ul>
+                <li>
+                  Gorol wytłumaczę dla scisłości osoba która nie jest rdzennie ze Śląska. Jeżeli sledzicie internetową rzeczywistość to skojarzycie, że to jest płapka na chtrą babe z Radomia. Nie spotkałam jej nigdy, może akurat jak wrócę na święta będzie mi dane.
+                </li>
+              </ul>
+            </aside>
+      </section>
+
+      <section class="section-header">
+            <h2>Studia</h2>
+            <img src="img/aei.jpg" />
+             <aside class="notes">
+              <ul>
+                <li>
+                  Co robie na śląsku pewnie nie trudno się domyslić, 6 lat temu zaczęłam tu studia (spokojnie już skończyłam) na wydziale ze zdjęcia czyli Wydziale Automatyki, Elektroniki i Informatyki Politechniki Śląskiej w Gliwicach.
+                </li>
+              </ul>
+            </aside>
+      </section>
+
+      <section class="section-header">
+            <h2>Inżynieria Biomedyczna</h2>
+            <img src="img/biometria.jpg" />
+
+             <aside class="notes">
+              <ul>
+                <li>
+                  Studiowałam Inzynierie Biomedyczną, czyli poznawałam jak monitorować sygnały z ciała człowieka, jak działa USG, RTG, endoskop itd itd...
+                </li>
+                <li>
+                  To zdjęcia akurat nawiązuje do mojej ulubionej dziedziny biomedycznej, czyli biometrii, nauce zajmujacej sie technikami pomiarów istot żywych, które to pomiary wykorzystywane są do automatycznego rozpoznawania ludzi. I jak tak na Was patrze to musze przyznać, że posiadacie bardzo ładne cechy biometryczne, jednak dziś nie o biometrii.
+                </li>
+                <li>
+                  Po skończeniu studiów inzynierskich, po 1 semestrze studiów magisterskich miała miejsce szalona impreza.
+                </li>
+              </ul>
+            </aside>
+      </section>
+
+      <section class="section-header">
+            <h2>Szalona impreza</h2>
+            <img src="img/impreza.jpg" />
+
+             <aside class="notes">
+              <ul>
+                <li>
+                  Musiała to być naprawdę szalona impreza bo razem z moją dobrą koleżanką ze studiów,  założyłysmy się że zaczniemy 2 kierunek studiów. Zapewne jakbyśmy tego nie chciały to nie potoczyłoby się na trzeźwo do przodu, ale skoro faceci zaczeli wątpić w nasz zapał założyłysmy się i złożyłysmy papiery na...
+                </li>
+              </ul>
+            </aside>
+      </section>
+
+      <section class="section-header">
+            <h2>Elektronika <br>i Telekomunikacja</h2>
+            <img src="img/kobieta_elektronik.png" />
+      </section>
+
+      <section class="section-header">
+            <h2>Quality Assurance Engineer</h2>
+            <img class="fragment" src="img/zart.jpg" />
+      </section>
+
+      </section>
+
+        <section>
+          <section class="section-header">
+            <h2>Testy </br> oprogramowania</h2>
+
+            <aside class="notes">
+              <ul>
+                <li>
+                  Testowanie oprogramowania – proces związany z wytwarzaniem oprogramowania. Jest to jeden z procesów zapewnienia jakości oprogramowania. Testowanie ma na celu weryfikację oraz walidację oprogramowania. Weryfikacja oprogramowania ma na celu sprawdzenie, czy wytwarzane oprogramowanie jest zgodne ze specyfikacją. Walidacja sprawdza, czy oprogramowanie jest zgodne z oczekiwaniami użytkownika.
+                </li>
+              </ul>
+            </aside>
+          </section>
+
+          <section class="section-header">
+            <h1>Tester?</h1>
+
+            <img src="img/monkey-computer.jpg" class="left space-right" />
+            <img src="img/tester.jpg" height="295" width="369" class="right fragment" />
+
+            <aside class="notes">
+              <li>
+                Czy tak wygląda tester?
+              </li>
+            </aside>
+          </section>
+
+          <section class="section-header">
+            <h1>Waterfall</h1>
+            <img src="img/kaskada.png" />
+          </section>
+
+          <section class="section-header">
+            <h1>Agile</h1>
+            <img src="img/agile.png" />
+          </section>
+
+        </section>
+
+        <section>
+
+          <section class="section-header">
+            <h2>Kiedy zacząć testowanie?</h2>
+          </section>
+
+          <section class="section-header">
+            <h2><em>Jak najwcześniej...</em></h2>
+            <h3>Tylko co testować?</h3>
+            <img class="fragment" src="img/monkey-computer.jpg" />
+          </section>
+
+          <section class="section-header">
+            <h2><em>Pracujemy w Agile</em></h2>
+            <img class="fragment" src="img/agile1.jpg" />
+          </section>
+
+          <section class="section-header">
+            <h2><em>UCD &amp; Agile</em></h2>
+            <img src="img/ucdAgile.jpg" />
+          </section>
+
+        </section>
+
+        <section>
+          <section class="section-header">
+            <h2>User story</h2>
+            <div class="fragment"><em>Jako <b>Bridget Jones</b></em></div>
+            <div class="fragment"><em>Chcę <b>się obudzić</b></em></div>
+            <div class="fragment"><em>Więc <b>wypiję kawę</b></em></div>
+            <aside class="notes">
+              <ul>
+                <li>
+                  Tak jak Persona mówi nam kim jest uzytkownik aplikacji tak user story opisuje jak persona wykorzystuje aplikację.
+                </li>
+                <li>
+                  Jednak UCD user story powie nam czemu, kiedy użytkownik będzie chciał używać aplikacji
+                </li>
+                <li>
+                  W Agile user story opisuje pojedynczą funkcjonalność, która będzie implementowana w nadchodzacym sprincie.
+                </li>
+                <li>
+                  User story dla naszej persony.
+                </li>
+              </ul>
+            </aside>
+          </section>
+
+          <section class="section-header">
+            <h2>Acceptance criteria</h2>
+            <div class="fragment">Kawa musi być gorąca</div>
+            <div class="fragment">Kawa musi być mocna</div>
+            <div class="fragment">Kawa musi być świeżo mielona</div>
+            <div class="fragment">Kawa musi mieć określoną ilość cukru i mleka</div>
+          </section>
+        </section>
+
+        <section>
+          <section>
+            <h2>Autmatyzujemy!</h2>
+            <ul class="list-style-none">
+            </ul>
+
+            <div id="scavenge"></div>
+            <div id="mark-sweep"></div>
+
+            <script>
+              (function() {
+                var scavengePaper = Raphael("scavenge", 640, 480),
+                    markSweepPaper = Raphael("mark-sweep", 640, 480),
+
+                    scavenge = scavengePaper.gearBox(),
+                    markSweep = markSweepPaper.gearBox(),
+
+                    scavengeCounter = 0,
+                    markSweepCounter = 0;
+
+                setInterval(function() {
+                  scavenge.animate({ transform: "r" + scavengeCounter }, 500);
+                  scavengeCounter += 50;
+                }, 501);
+
+                setInterval(function() {
+                  markSweep.animate({ transform: "r" + markSweepCounter }, 1000);
+                  markSweepCounter += 15;
+                }, 1001);
+              } ());
+            </script>
+
+            <aside class="notes">
+              Zmiana testów manualnych na skrypty automatyczne wykonujące zadania użytkownika/testera
+            </aside>
+          </section>
+
+          <section>
+            <h2>Behavior-driven development</h2>
+            <ul>
+                <li class="fragment">Stanowi pętlę informacji zwrotnej pomiędzy zespołem dostarczającym oprogramowanie, a interesariuszami definiującymi wymagania</li>
+                <li class="fragment">Każde zachowanie definiowane jest w języku zbliżonym do naturalnego</li>
+                <li class="fragment">Każdy przypadek testowy definiowany jest jako opowieść (nawiązanie do user story), która definiuje co system powinien robić</li>
+            </ul>
+
+            <aside class="notes">
+              <ul>
+                <li>BDD jest szkieletem pozwalającym na scharakteryzowanie działania aplikacji w postaci zachowań (behaviors), które powinna przejawiać aby móc uznać ją za spełniającą wymagania klienta.</li>
+                <li>Po pierwsze, istnieje możliwość specyfikacji zachowań w ramach rozmowy z klientem lub inną osobą pełniącą rolę właściciela produktu. Osoba nie musi być "techniczna", ze względu na duże zmniejszenie bariery językowej.</li>
+                <li>Po drugie, duże korzyści płyną również dla pracy z punktu widzenia developera. Można z pomocą BDD zadawać sobie pytanie: "Co jest najważniejszą z kolei rzeczą, której ten system jeszcze nie robi?"..</li>
+                <li>Zadawanie sobie tego typu pytań pozwala na odkrycie wartości biznesowej funkcjonalności do zaimplementowania i nadania im na tej podstawie priorytetu. Udzielając odpowiedzi na te pytania tak naprawdę formułuje się przypadki testowe w dialekcie BDD: "System powinien robić..."</li>
+              </ul>
+            </aside>
+          </section>
+        </section>
+
+        <section>
+          <section class="section-header">
+            <h2>Acceptance test</h2>
+            <div class="fragment"><span class="color">Given</span> I am in the <b>kitchen</b></div>
+            <div class="fragment"><span class="color">When</span> I put <b>coffe beans</b> to the <b>coffe machine</b></div>
+            <div class="fragment"><span class="color">And</span> I put <b>cup</b> to the <b>feeder plate</b></div>
+            <div class="fragment"><span class="color">And</span> I wait until led control will switch off</div>
+            <div class="fragment"><span class="color">And</span> I take <b>cup</b> from <b>feeder plate</b></div>
+            <div class="fragment"><span class="color">And</span> I put <b>2 spoons of milk</b> to the <b>cup</b></div>
+            <div class="fragment"><span class="color">And</span> I put <b>2 spoons of sugar</b> to the <b>cup</b></div>
+            <div class="fragment"><span class="color">And</span> I drink a <b>coffe</b></div>
+            <div class="fragment"><span class="color">Then</span> I should <b>feel new power</b></div>
+          </section>
+
+          <section class="section-header">
+            <h2>Jak to wygląda pod spodem</h2>
+            <aside class="notes">
+              <ul>
+                <li>Kroki które opisane były jako zrozumiałe dla wszystkich zainteresowanych (klient, zespoł developerski w warstwie interpretujacej testy wyglada nastepujaco</li>
+              </ul>
+            </aside>
+          </section>
+
+          <section class="section-header">
+            <div>Given I am in the <b>kitchen</b></div>
+            <pre class="fragment"><code class="ruby">Given(/^I am in the (.*?)/) do |where|
+  @person.goTo(where)
+end</code></pre>
+          </section>
+
+          <section class="section-header">
+            <div>When I put <b>coffe beans</b> to the <b>coffe machine</b></div>
+            <pre class="fragment"><code class="ruby">When(/^I put (.*?) to the (.*?)$/) do |product_name, destination_name|
+  destination.put(product_name)
+end</code></pre>
+          </section>
+
+           <section class="section-header">
+            <div>Then I should <b>feel new power</b></div>
+            <pre class="fragment"><code class="ruby">Then(/^I should feel new power$/) do
+  if @person.getCoffeSatisfactionLevel() < 10
+    fail('Too little power to start day effectively! Prepare second coffee ;)')
+  end
+end</code></pre>
+          </section>
+        </section>
+
+        <section class="good">
+          <h2>Korzyści płynące z automatyzacji</h2>
+            <ul>
+              <li class="fragment">W Agile stawiamy na automatyzację.</li>
+              <li class="fragment">Możliwość przetestowania wielu zestawów danych</li>
+              <li class="fragment">Minimalizacja żmudnej pracy.</li>
+              <li class="fragment">Szybka informacja zwrotna czy wszystko działa.</li>
+            </ul>
+        </section>
+
+        <section class="section-header">
+          <img src="img/blog.jpg" alt="Browser flow" />
+        </section>
+
+        <section class="section-header">
+          <img src="img/quality.jpg" alt="Browser flow" />
+        </section>
+
+        <section class="section-header">
+          <h2>Dziękuję za uwagę!</h2>
+        </section>
+
+    <script src="lib/js/head.min.js"></script>
+    <script src="js/reveal.min.js"></script>
+
+    <script>
+      var BLUE = "#63ABF0",
+          RED = "#FA5F0C",
+          GREEN = "#52A617",
+          YELLOW = "#FFC03C";
+
+      Function.prototype.curry = function() {
+        var fn = this,
+            args = [].slice.call(arguments);
+
+        return function() {
+          return fn.apply(this, args.concat([].slice.call(arguments)));
+        };
+      };
+
+      function getArrayOfDomElements(selector) {
+        return [].slice.call(document.querySelectorAll(selector));
+      }
+
+      function applyColor(color, element) {
+        element.setAttribute("data-background", color);
+      }
+
+      getArrayOfDomElements(".section-header").forEach(applyColor.curry(BLUE));
+      getArrayOfDomElements(".good").forEach(applyColor.curry(GREEN));
+      getArrayOfDomElements(".bad").forEach(applyColor.curry(RED));
+      getArrayOfDomElements(".warning").forEach(applyColor.curry(YELLOW));
+
+      Reveal.initialize({
+        controls: true,
+        progress: true,
+        history: true,
+        center: true,
+
+        theme: "default",
+        transition: "slide",
+        transitionSpeed: "fast",
+        backgroundTransition: "linear",
+
+        dependencies: [
+          {
+            src: "lib/js/classList.js",condition: function() { return !document.body.classList; }
+          },
+          {
+            src: "plugin/highlight/highlight.js", async: true, callback: function() { hljs.initHighlightingOnLoad(); }
+          },
+          {
+            src: "plugin/zoom-js/zoom.js", async: true, condition: function() { return !!document.body.classList; }
+          },
+          {
+            src: "plugin/notes/notes.js", async: true, condition: function() { return !!document.body.classList; }
+          },
+          {
+            src: "socket.io/socket.io.js", async: true
+          },
+          {
+            src: "plugin/notes-server/client.js", async: true
+          }
+        ]
+      });
+    </script>
+  </body>
+</html>
