@@ -16,6 +16,13 @@ body {
   visibility: hidden !important;
 }
 
+.reveal .stick {
+  position: absolute;
+  top: 60px;
+  right: 120px;
+  background-color: white;
+}
+
 .reveal #sendEvents {
   font-size: 1em;
   width: 400px;
@@ -384,7 +391,7 @@ body {
 
 .reveal .license a {
   vertical-align: middle;
-  margin-bottom: 5px;
+  bottom: 1px;
 }
 
 .reveal #random {

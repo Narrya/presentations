@@ -10,7 +10,7 @@ module.exports = function(grunt) {
         " * http://lab.hakim.se/reveal-js\n" +
         " * MIT licensed\n" +
         " *\n" +
-        " * Copyright (C) 2013 Wojciech Gawroński, http://afronski.pl\n" +
+        " * Copyright (C) 2013 Kamila Kupidura, http://cookingforgeeks.pl\n" +
         " */"
     },
 
